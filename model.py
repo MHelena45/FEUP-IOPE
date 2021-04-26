@@ -1,7 +1,7 @@
 import math;
 from gurobipy import *
 
-# 
+# distance between the ports
 d={}
 d={ ("Doce","Doce"):  0,  ("Doce","Bom"):math.inf,  ("Doce","Sky"):6000, ("Doce","Moon"):5000, ("Doce","Mars"):5500,
     ("Bom","Doce"):math.inf,  ("Bom","Bom"):0,  ("Bom","Sky"): 6000, ("Bom","Moon"): 5800, ("Bom","Mars"):4800,
@@ -73,46 +73,53 @@ t[17, 1] = d["Bom","Moon"]/25 + d["Moon","Sky"]/30 + d["Sky","Bom"]/25
 t[18, 1] = d["Bom","Mars"]/25 + d["Mars","Moon"]/30 + d["Moon","Bom"]/25
 
 
-# Number of ships
+# Number of trips
 S1 = [i for i in range(1, 19)]
 S2 = [i for i in range(1, 9)]
+M = 50; # Value greater than the number of needed vehicles for sure
 
 model = Model("IOPE")
 
 # Number of vehicles of type 1
 x={}
 a={}
-for i in S1:
-    x[i,1]=model.addVar(vtype="I", name="x(%s,%s)" % (i,1))
-    for i in S1:
-        a[i,1]=model.addVar(vtype="I", name="a(%s,%s)" % (i,1))
+for i in range(1, M):
+    # Binary value: 1 if the vehicle is used, 0 if the vehicle is not used
+    x[i,1]=model.addVar(vtype="B", name="x(%s,%s)" % (i,1))
+    for j in range(1, S1):
+        # a[2,3,1] corresponds to the number trips of type 3 made by the 2º boat of type 1
+        a[i,j,1]=model.addVar(vtype="I", name="a(%s,%s,%s)" % (i,j,1))
 model.update()  # vars were added
     
 # Number of vehicles of type 2
-x={}
-for i in S2:
-    x[i,2]=model.addVar(vtype="I", name="x(%s,%s)" % (i,2))
-    for i in S1:
-        a[i,2]=model.addVar(vtype="I", name="a(%s,%s)" % (i,2))
+for i in range(1, M):
+    # Binary value: 1 if the vehicle is used, 0 if the vehicle is not used
+    x[i,2]=model.addVar(vtype="B", name="x(%s,%s)" % (i,2))
+    for j in range(1, S2):
+        a[i,j,2]=model.addVar(vtype="I", name="a(%s,%s,%s)" % (i,j,2))
 model.update()  # vars were added
-    
-# # Number of trips done with vehicles type 1
-# y={}
-# for i in S1:
-#     y[i,1]=model.addVar(vtype="I", name="y(%s,%s)" % (i,1))
-# model.update()  # vars were added
-    
-# # Number of trips done with vehicles 2
-# x={}
-# for i in S2:
-#     y[i,2]=model.addVar(vtype="I", name="y(%s,%s)" % (i,2))
-# model.update()  # vars were added
 
-for i in S1:
-    model.addConstr(quicksum( t[j,1] * a[j,1] for j in S1) <= 345 * 24, "c1(%s,%s)" % (i,1))
+# for each vehicle
+for i in range(1, M):
+    # if a trip is assignee to a boot, it is used
+    model.addConstr(quicksum(a[i,j,1] for j in S1) >= x[i,1], "c1(%s,%s)" % (i,1)) # if nothing is assigned, the value is 0
+    model.addConstr(x[i,1] * quicksum(a[i,j,1] for j in S1) >= quicksum(a[i,j,1] for j in S1), "c1(%s,%s)" % (i,1)) # if something is assigned, the value is 1
+    # ensure that a boot x can only be use if the boot x-1 has been used
+    if i >=2:
+        model.addConstr(x[i,1] <= x[i-1,1], "c3(%s,%s)" % (i,1))
+        model.addConstr(x[i,2] <= x[i-1,2], "c4(%s,%s)" % (i,2))
 
-for i in S2:
-    model.addConstr(quicksum( t[j,2] * a[j,2] for j in S2) <= 345 * 24, "c2(%s,%s)" % (i,2))
+# for each vehicle
+for i in M:
+    #makes sure that the trips assignee last less than the operation time
+    model.addConstr(quicksum( t[j,1] * a[i,j,1] for j in S1) <= 345 * 24, "c5(%s,%s)" % (i,1))
+    #the same for type 2
+    model.addConstr(quicksum( t[j,2] * a[i,j,2] for j in S2) <= 345 * 24, "c6(%s,%s)" % (i,2))
+
+# Bom export of Wheat
+# Bom – Mars – Bom [6,1] e [6,2]; Bom – Mars - Moon - Bom [18, 1]; Bom – Mars - Sky - Bom [8, 1] e [8, 2]
+model.addConstr(quicksum(a[i,6,1] + a[i,18,1] + a[i,8,1] for i in S1)* 35000 + quicksum(a[i,6,2] + a[i,8,2] for i in S1) * 70000 <= 20000, "c7")
+
 
 # TODO: Change to costs
 model.setObjective(quicksum(x[i,2] for i in S2) + quicksum(x[i,1] for i in S1), GRB.MINIMIZE)
