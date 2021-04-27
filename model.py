@@ -82,10 +82,11 @@ model = Model("IOPE")
 
 # Number of vehicles of type 1
 x={}
+x[1]=model.addVar(vtype="I", name="x(%s)" % (1))
+x[2]=model.addVar(vtype="I", name="x(%s)" % (2))
+
 a={}
 for i in range(1, M):
-    # Binary value: 1 if the vehicle is used, 0 if the vehicle is not used
-    x[i,1]=model.addVar(vtype="B", name="x(%s,%s)" % (i,1))
     for j in range(1, S1):
         # a[2,3,1] corresponds to the number trips of type 3 made by the 2º boat of type 1
         a[i,j,1]=model.addVar(vtype="I", name="a(%s,%s,%s)" % (i,j,1))
@@ -93,21 +94,9 @@ model.update()  # vars were added
     
 # Number of vehicles of type 2
 for i in range(1, M):
-    # Binary value: 1 if the vehicle is used, 0 if the vehicle is not used
-    x[i,2]=model.addVar(vtype="B", name="x(%s,%s)" % (i,2))
     for j in range(1, S2):
         a[i,j,2]=model.addVar(vtype="I", name="a(%s,%s,%s)" % (i,j,2))
 model.update()  # vars were added
-
-# for each vehicle
-for i in range(1, M):
-    # if a trip is assignee to a boot, it is used
-    model.addConstr(quicksum(a[i,j,1] for j in S1) >= x[i,1], "c1(%s,%s)" % (i,1)) # if nothing is assigned, the value is 0
-    model.addConstr(x[i,1] * quicksum(a[i,j,1] for j in S1) >= quicksum(a[i,j,1] for j in S1), "c1(%s,%s)" % (i,1)) # if something is assigned, the value is 1
-    # ensure that a boot x can only be use if the boot x-1 has been used
-    if i >=2:
-        model.addConstr(x[i,1] <= x[i-1,1], "c3(%s,%s)" % (i,1))
-        model.addConstr(x[i,2] <= x[i-1,2], "c4(%s,%s)" % (i,2))
 
 # for each vehicle
 for i in M:
