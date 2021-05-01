@@ -77,6 +77,7 @@ t[18, 1] = d["Bom","Mars"]/25 + d["Mars","Moon"]/30 + d["Moon","Bom"]/25
 S1 = [i for i in range(1, 19)]
 S2 = [i for i in range(1, 9)]
 M = 50; # Value greater than the number of needed vehicles for sure
+PT = [i for i in range(1, 5)]
 
 model = Model("IOPE")
 
@@ -86,7 +87,7 @@ a={}
 for i in range(1, M):
     # Binary value: 1 if the vehicle is used, 0 if the vehicle is not used
     x[i,1]=model.addVar(vtype="B", name="x(%s,%s)" % (i,1))
-    for j in range(1, S1):
+    for j in S1:
         # a[2,3,1] corresponds to the number trips of type 3 made by the 2º boat of type 1
         a[i,j,1]=model.addVar(vtype="I", name="a(%s,%s,%s)" % (i,j,1))
 model.update()  # vars were added
@@ -95,7 +96,7 @@ model.update()  # vars were added
 for i in range(1, M):
     # Binary value: 1 if the vehicle is used, 0 if the vehicle is not used
     x[i,2]=model.addVar(vtype="B", name="x(%s,%s)" % (i,2))
-    for j in range(1, S2):
+    for j in S2:
         # Wheat
         a[i,j,2,1]=model.addVar(vtype="I", name="a(%s,%s,%s,%s)" % (i,j,2,1))
         # Corn
@@ -106,6 +107,49 @@ for i in range(1, M):
         a[i,j,2,4]=model.addVar(vtype="I", name="a(%s,%s,%s,%s)" % (i,j,2,4))
 model.update()  # vars were added
 
+# distance traveled with the type 1 vessel in full
+dFull1 = model.addVar(vtype="I", name="dFull(%s)" % (1))
+# distance traveled with the type 2 vessel in full
+dFull2 = model.addVar(vtype="I", name="dFull(%s)" % (2))
+
+# distance traveled with the type 1 vessel empty
+dEmpty1 = model.addVar(vtype="I", name="dEmpty(%s)" % (1))
+# distance traveled with the type 2 vessel empty
+dEmpty2 = model.addVar(vtype="I", name="dEmpty(%s)" % (2))
+
+model.update()
+
+for vessel in M:
+    model.addConstr(dFull1 == quicksum(
+        a[vessel,1,1] * d["Doce","Sky"] * 2 +                           # trip: Doce – Sky – Doce
+        a[vessel,2,1] * d["Doce","Mars"] * 2 *  +                       # trip: Doce – Mars – Doce
+        a[vessel,3,1] * (d["Doce","Sky"] + d["Mars","Doce"])  +       # trip: Doce – Sky – Mars - Doce
+        a[vessel,4,1] * (d["Doce","Mars"] + + d["Sky","Doce"]) +         # trip: Doce – Mars – Sky – Doce
+        a[vessel,5,1] * d["Bom","Sky"] * 2 +                           # trip: Bom – Sky – Bom
+        a[vessel,6,1] * d["Bom","Mars"] * 2 +                          # trip: Bom – Mars – Bom
+        a[vessel,7,1] * (d["Bom","Sky"] + d["Mars","Bom"]) +           # trip: Bom – Sky - Mars – Bom
+        a[vessel,8,1] * (d["Bom","Mars"] +  + d["Sky","Bom"]) +          # trip: Bom – Mars - Sky - Bom
+        a[vessel,9,1] * d["Doce","Moon"] * 2 +                         # trip: Doce – Moon – Doce
+        a[vessel,10,1] * (d["Doce","Sky"] + d["Moon","Doce"]) +       # trip: Doce – Sky - Moon – Doce
+        a[vessel,11,1] * (d["Doce","Moon"] + d["Mars","Doce"]) +       # trip: Doce – Moon - Mars - Doce
+        a[vessel,12,1] * (d["Doce","Moon"] + d["Sky","Doce"]) +        # trip: Doce – Moon - Sky - Doce
+        a[vessel,13,1] * (d["Doce","Mars"] + d["Moon","Doce"]) +      # trip: Doce – Mars – Moon – Doce
+        a[vessel,14,1] * d["Bom","Moon"] * 2 +                         # trip: Bom – Moon – Bom
+        a[vessel,15,1] * (d["Bom","Sky"] + d["Moon","Bom"]) +            # trip: Bom – Sky - Moon – Bom
+        a[vessel,16,1] * (d["Bom","Moon"] + d["Mars","Bom"]) +        # trip: Bom - Moon – Mars - Bom
+        a[vessel,17,1] * (d["Bom","Moon"] + d["Sky","Bom"]) +         # trip: Bom - Moon – Sky - Bom
+        a[vessel,18,1] * (d["Bom","Mars"] + d["Moon","Bom"])         # trip: Bom – Mars - Moon - Bom
+    ))
+    model.addConstr(dFull2 == quicksum(
+        a[vessel,1,1] * d["Doce","Sky"] * 2 +                           # trip: Doce – Sky – Doce
+        a[vessel,2,2] * d["Doce","Mars"] * 2 *  +                       # trip: Doce – Mars – Doce
+        a[vessel,3,2] * (d["Doce","Sky"] + d["Mars","Doce"])  +         # trip: Doce – Sky – Mars - Doce
+        a[vessel,4,2] * (d["Doce","Mars"] + + d["Sky","Doce"]) +         # trip: Doce – Mars – Sky – Doce
+        a[vessel,5,2] * d["Bom","Sky"] * 2 +                           # trip: Bom – Sky – Bom
+        a[vessel,6,2] * d["Bom","Mars"] * 2 +                          # trip: Bom – Mars – Bom
+        a[vessel,7,2] * (d["Bom","Sky"] + d["Mars","Bom"]) +           # trip: Bom – Sky - Mars – Bom
+        a[vessel,8,2] * (d["Bom","Mars"] +  + d["Sky","Bom"])           # trip: Bom – Mars - Sky - Bom
+    ))
 
 
 
@@ -144,42 +188,40 @@ model.addConstr(quicksum(a[i,5,1,4] + a[i,17,1,4] + a[i,8,1,4] + a[i,6,1,4] + a[
 
 # 30 000 comes from Mars
 # Bom – Mars – Bom [6,1] and [6,2]; Bom – Sky - Mars – Bom [7,1] and [7,2]; Bom - Moon – Mars - Bom [16,1]
-model.addConstr(quicksum(a[i,6,1] + a[i,7,1] + a[i,16,1] for i in S1)* 35000 + quicksum(a[i,6,2] + a[i,7,2] for i in S1) * 70000 >= 30000, "c9")
-
+#model.addConstr(quicksum(a[i,6,1] + a[i,7,1] + a[i,16,1] for i in S1)* 35000 + quicksum(a[i,6,2] + a[i,7,2] for i in S1) * 70000 >= c[3,1], "c9")
 # 40 000 comes from Sky
 # Bom – Sky – Bom [5,1] and [5, 2]; Bom - Moon – Sky - Bom [17, 1]; Bom – Mars - Sky - Bom [8, 1] and [8, 2]
-model.addConstr(quicksum(a[i,5,1] + a[i,17,1] + a[i,8,1] for i in S1)* 35000 + quicksum(a[i,5,2] + a[i,8,2] for i in S1) * 70000 >= 40000, "c10")
+#model.addConstr(quicksum(a[i,5,1] + a[i,17,1] + a[i,8,1] for i in S1)* 35000 + quicksum(a[i,5,2] + a[i,8,2] for i in S1) * 70000 >= 40000, "c10")
 
 # Doce export of Corn: 40 000
 
 # 10 000 go to Mars 
 # Doce – Mars – Doce [2, 1] and [2, 2]; Doce – Mars – Moon – Doce [13, 1]; Doce – Mars – Sky – Doce [4, 1] and [4, 2]
-model.addConstr(quicksum(a[i,2,1] + a[i,13,1] + a[i,4,1] for i in S1)* 35000 + quicksum(a[i,2,2] + a[i,4,2] for i in S1) * 70000 >= 10000, "c11")
+model.addConstr(quicksum(a[i,2,1] + a[i,13,1] + a[i,4,1] for i in S1)* 35000 + quicksum(a[i,2,2] + a[i,4,2] for i in S1) * 70000 >= 10000, "c10")
 
 # 30 000 go to Moon
 # Doce – Moon – Doce [9, 1]; Doce – Moon - Mars - Doce [11, 1]; Doce – Moon - Sky - Doce [12, 1]
-model.addConstr(quicksum(a[i,9,1] + a[i,11,1] + a[i,12,1] for i in S1)* 35000 <= 30000, "c12")
+model.addConstr(quicksum(a[i,9,1] + a[i,11,1] + a[i,12,1] for i in S1)* 35000 <= 30000, "c11")
 
 
 ## Doce import of Copper: 20 000 
 
 # 10 000 comes from Sky
 # Doce – Sky – Doce [1, 1] and [1, 2]; Doce – Moon - Sky - Doce [12, 1]; Doce – Mars – Sky – Doce [4, 1] and [4, 2]
-model.addConstr(quicksum(a[i,1,1] + a[i,12,1] + a[i,4,1] for i in S1)* 35000 + quicksum(a[i,1,2] + a[i,4,2] for i in S1) * 70000 >= 10000, "c13")
+model.addConstr(quicksum(a[i,1,1] + a[i,12,1] + a[i,4,1] for i in S1)* 35000 + quicksum(a[i,1,2] + a[i,4,2] for i in S1) * 70000 >= 10000, "c12")
 
 # 10 000 comes from Moon
 # Doce – Moon – Doce [9, 1]; Doce – Sky - Moon – Doce [10, 1]; Doce – Moon - Mars - Doce [11, 1]
-model.addConstr(quicksum(a[i,9,1] + a[i,10,1] + a[i,11,1] for i in S1)* 35000 >= 10000, "c14")
+model.addConstr(quicksum(a[i,9,1] + a[i,10,1] + a[i,11,1] for i in S1)* 35000 >= 10000, "c13")
 
 
 # Doce import of Iron: 20 000 
-
 # 30 000 comes from Mars
 # 40 000 comes from Sky
 # Doce – Mars – Doce [2, 1] and [2, 2]; Doce – Sky – Mars - Doce [3, 1] and [3, 2]; Doce – Moon - Mars - Doce  [11, 1]
 # Doce – Sky – Doce [1, 1] and [1, 2]; Doce – Moon - Sky - Doce [12, 1]; Doce – Mars – Sky – Doce [4, 1] and [4, 2]
 model.addConstr(quicksum(a[i,1,1] + a[i,2,1] + a[i,3,1] + a[i,11,1] + a[i,12,1] + a[i,4,1] for i in S1)* 35000 + 
-    quicksum(a[i,1,2] + a[i,2,2] + a[i,3,2] + a[i,4,2] for i in S1) * 70000 >= 20000, "c15")
+    quicksum(a[i,1,2] + a[i,2,2] + a[i,3,2] + a[i,4,2] for i in S1) * 70000 >= 20000, "c14")
 
 # Import of Mars
 
@@ -187,31 +229,43 @@ model.addConstr(quicksum(a[i,1,1] + a[i,2,1] + a[i,3,1] + a[i,11,1] + a[i,12,1] 
 
 # 10 000 of Corn 
 # Doce – Mars – Doce [2, 1] and [2, 2]; Doce – Mars – Moon – Doce [13, 1]; Doce – Mars – Sky – Doce [4, 1] and [4, 2]
-model.addConstr(quicksum(a[i,2,1] + a[i,13,1] + a[i,4,1] for i in S1)* 35000 + quicksum(a[i,2,2] + a[i,4,2] for i in S1) * 70000 >= 10000, "c16")
+model.addConstr(quicksum(a[i,2,1] + a[i,13,1] + a[i,4,1] for i in S1)* 35000 + quicksum(a[i,2,2] + a[i,4,2] for i in S1) * 70000 >= 10000, "c15")
 
 # Sky export Iron: 40000 
 # Doce – Sky – Doce [1, 1] and [1, 2]; Doce – Moon - Sky - Doce [12, 1]; Doce – Mars – Sky – Doce  [4, 1] and [4, 2];
 # Bom – Sky – Bom [5,1] and [5, 2]; Bom - Moon – Sky - Bom [17, 1]; Bom – Mars - Sky - Bom [8, 1] and [8, 2]
 model.addConstr(quicksum(a[i,1,1] + a[i,4,1] + a[i,5,1] + a[i,8,1] + a[i,12,1] + a[i,17,1] for i in S1)* 35000 + 
-    quicksum(a[i,1,2] + a[i,4,2] + a[i,5,2] + a[i,8,2] for i in S1) * 70000 >= 40000, "c17")
+    quicksum(a[i,1,2] + a[i,4,2] + a[i,5,2] + a[i,8,2] for i in S1) * 70000 >= 40000, "c16")
 
 
 # Acabam em Sky – Wheat: 30 000
-# Bom – Sky – Bom [5,1] and [5, 2]; Bom – Sky - Moon – Bom [15, 1]; Bom – Sky - Mars – Bom
-# Y10,1 * 35 000 + Y10,2 * 70 000 + Y13,1 * 35 000 + + Y14,1 * 35 000 + Y14,2 * 70 00 <= 30 000
+# Bom – Sky – Bom [5,1] and [5, 2]; Bom – Sky - Moon – Bom [15, 1]; Bom – Sky - Mars – Bom [7,1] and [7,2]
+model.addConstr(quicksum(a[i,5,1] + a[i,15,1] + a[i,7,1] for i in S1)* 35000 + 
+    quicksum(a[i,5,2] + a[i,7,2] for i in S1) * 70000 >= 30000, "c17")
 
 # Export of Moon -  Copper: 10000
-# Doce – Moon – Doce [9, 1]; Doce – Sky - Moon – Doce; Doce – Mars – Moon – Doce
-# Y2,1 * 35 000 + Y4,1 * 35 000 + Y8,1 * 35 000 <= 10 000
+# Doce – Moon – Doce [9, 1]; Doce – Sky - Moon – Doce [10, 1]; Doce – Mars – Moon – Doce [13, 1]
+model.addConstr(quicksum(a[i,9,1] + a[i,10,1] + a[i,13,1] for i in S1)* 35000 >= 10000, "c18")
 
 # Chegam a Moon – Corn: 30 000
-# Doce – Moon – Doce [9, 1]; Doce – Moon - Mars - Doce; Doce – Moon - Sky - Doce
-# Y2,1 * 35 000 + Y6,1 * 35 000 + Y7,1 * 35 000 <= 10 000
+# Doce – Moon – Doce [9, 1]; Doce – Moon - Mars - Doce [11, 1]; Doce – Moon - Sky - Doce [12, 1]
+model.addConstr(quicksum(a[i,9,1] + a[i,11,1] + a[i,12,1] for i in S1)* 35000 >= 10000, "c19")
+
+
+# 0,1 * (número de veículos do tipo 1 *  1000 + número de veículos do tipo 2 *  1500) +  
+# ((número de veículos do tipo 1 *  1000 + número de veículos do tipo 2 *  1500) / 25) + 
+# número de veículos do tipo 1 * 70 + 
+# número de veículos do tipo 2 * 75 + 
+# ( distância percorrida cheio pelo veículo tipo 1/1000 * 50 + distância percorrida vazio pelo veículo tipo 1/1000 * 42)* custo de combustível + 
+# ( distância percorrida cheio pelo veículo tipo 2/1000 * 40 + distância percorrida vazio pelo veículo tipo 2/1000 * 30)* custo de combustível 
 
 
 
-# TODO: Change to costs
-model.setObjective(quicksum(x[i,2] for i in S2) + quicksum(x[i,1] for i in S1), GRB.MINIMIZE)
+model.setObjective(quicksum(0,1 * (quicksum(x[i,1] for i in S1) * 1000 + quicksum(x[i,2] for i in S2) * 1500) + 
+(quicksum(x[i,1] for i in S1) * 1000 + quicksum(x[i,2] for i in S2) * 1500) / 25 + 
+(quicksum(x[i,1] for i in S1) * 70 + quicksum(x[i,2] for i in S2) * 75) +
+(dFull1/1000) * 50 * 0.8), GRB.MINIMIZE)
+# Falta a distância percorrida !!
 
 model.update() 
     
