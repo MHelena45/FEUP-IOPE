@@ -82,12 +82,9 @@ EXP = ["Wheat", "Corn"]
 
 model = Model("IOPE")
 
-x = {}
 a={} 
 # Number of vehicles of type 2
 for vessel in range(1, M):
-    x[vessel,1] = model.addVar(vtype="B", name="x(%s,%s)"% (vessel,1))
-    x[vessel,2] = model.addVar(vtype="B", name="x(%s,%s)"% (vessel,2))
     for importType in IMP:
         for export in EXP:
             for tripType in S1:
@@ -95,6 +92,9 @@ for vessel in range(1, M):
             for tripType in S2:
                 a[vessel,tripType,2,importType, export]=model.addVar(vtype="I", name="a(%s,%s,%s,%s,%s)" % (vessel,tripType,2,importType, export))
 model.update()  # vars were added
+
+x1 = model.addVar(vtype="I", name="x1")
+x2 = model.addVar(vtype="I", name="x2")
 
 # distance traveled with the type 1 vessel in full
 dFull1 = model.addVar(vtype="I", name="dFull(%s)" % (1))
@@ -126,7 +126,7 @@ for vessel in range(1, M):
         model.addConstr(a[vessel,18,1,importType, "Corn"]  == 0)
 
 model.addConstr(dFull1 == quicksum(a[vessel,1,1,importType, export] * d["Doce","Sky"] * 2  +    # trip: Doce – Sky – Doce
-    a[vessel,2,1,importType, export] * d["Doce","Mars"] * 2   +     # trip: Doce – Mars – Doce
+    a[vessel,2,1,importType, export] * d["Doce","Mars"] * 2   +                         # trip: Doce – Mars – Doce
     a[vessel,3,1,importType, export] * (d["Doce","Sky"] + d["Mars","Doce"])  +       # trip: Doce – Sky – Mars - Doce
     a[vessel,4,1,importType, export] * (d["Doce","Mars"] + + d["Sky","Doce"]) +         # trip: Doce – Mars – Sky – Doce
     a[vessel,5,1,importType, export] * d["Bom","Sky"] * 2 +                           # trip: Bom – Sky – Bom
@@ -283,29 +283,31 @@ model.addConstr(quicksum(a[vessel,9,1,importType,"Corn"] + a[vessel,11,1,importT
     for vessel in range(1, M) for importType in IMP)* 35 >= 10000, "c17")
 
 
-# for each vehicle
+# for each vehicle assure the times constraints
 for vessel in range(1, M):
     #makes sure that the trips assignee last less than the operation time
     model.addConstr(quicksum( t[j,1] * a[vessel,j,1,importType,export] for j in S1 for importType in IMP for export in EXP) <= 345 * 24, "c18(%s,%s)" % (vessel,1))
     #the same for type 2
     model.addConstr(quicksum( t[j,2] * a[vessel,j,2,importType,export] for j in S2 for importType in IMP for export in EXP) <= 345 * 24, "c19(%s,%s)" % (vessel,2))
 
-
-# for each vehicle
+# The assignment is first made on lower index variables
 for vessel in range(1, M):
-    # if a trip is assignee to a boot, it is used
-    model.addConstr(quicksum(a[vessel,j,1,importType,export] for j in S1 for importType in IMP for export in EXP) 
-        >= x[vessel,1], "c20(%s,%s)" % (vessel,1)) # if nothing is assigned, the value is 0
-    model.addConstr(x[vessel,1] * quicksum(a[vessel,j,1,importType,export] for j in S1 for importType in IMP for export in EXP) 
-        >= quicksum(a[vessel,j,1,importType,export] for j in S1 for importType in IMP for export in EXP), "c21(%s,%s)" % (vessel,1)) # if something is assigned, the value is 1
-    model.addConstr(quicksum(a[vessel,j,2,importType,export] for j in S2 for importType in IMP for export in EXP) 
-        >= x[vessel,2], "c22(%s,%s)" % (vessel,2)) # if nothing is assigned, the value is 0
-    model.addConstr(x[vessel,2] * quicksum(a[vessel,j,2,importType,export] for j in S2 for importType in IMP for export in EXP) 
-        >= quicksum(a[vessel,j,2,importType,export] for j in S2 for importType in IMP for export in EXP), "c23(%s,%s)" % (vessel,2)) # if something is assigned, the value is 1
-    # ensure that a boot x can only be use if the boot x-1 has been used
     if vessel >=2:
-        model.addConstr(x[vessel,1] <= x[vessel-1,1], "c24(%s,%s)" % (vessel,1))
-        model.addConstr(x[vessel,2] <= x[vessel-1,2], "c25(%s,%s)" % (vessel,2))
+        model.addConstr(quicksum(a[vessel-1,i,1,importType, export] for i in S1 for export in EXP for importType in IMP) 
+            >= quicksum(a[vessel,i,1,importType, export] for i in S1 for export in EXP for importType in IMP), "c20")
+        model.addConstr(quicksum(a[vessel-1,i,2,importType, export] for i in S2 for export in EXP for importType in IMP) 
+            >= quicksum(a[vessel,i,2,importType, export] for i in S2 for export in EXP for importType in IMP), "c21")
+
+
+
+# model.addConstr(tripNumber[vessel,2] == quicksum(a[vessel,i,2,importType, export] for i in S2 for export in PT for importType in PT), "c21")
+# TODO: get the number of vessels for the variable a
+# for vessel in range(1, M):
+    # if a[vessel,..] = 0 ==> x[1] < vessel
+    # model.addConstr(quicksum(a[vessel,i,1,importType, export] for export in PT for importType in PT)  >= x[1] - vessel + 1, "c20") # change
+    # if a[vessel,..] > 0 ==> x[1] >= vessel
+
+# model.addConstr(x[1] == min_(quicksum(a[vessel,i,1,importType, export] for export in PT for importType in PT), 1))
 
 
 # 0,1 * (número de veículos do tipo 1 *  1000 + número de veículos do tipo 2 *  1500) +  
@@ -315,11 +317,8 @@ for vessel in range(1, M):
 # ( distância percorrida cheio pelo veículo tipo 1/1000 * 50 + distância percorrida vazio pelo veículo tipo 1/1000 * 42)* custo de combustível + 
 # ( distância percorrida cheio pelo veículo tipo 2/1000 * 40 + distância percorrida vazio pelo veículo tipo 2/1000 * 30)* custo de combustível 
 
-model.setObjective(0.1 * (quicksum(x[vessel,1] for vessel in range(1, M)) * 1000 +
-    quicksum(x[vessel,2] for vessel in range(1, M)) * 1500) + 
-    (quicksum(x[vessel,1] for vessel in range(1, M)) * 1000 + quicksum(x[vessel,2] for vessel in range(1, M)) * 1500) / 25 +  
-    (quicksum(x[vessel,1] for vessel in range(1, M)) * 70) + (quicksum(x[vessel,2] for vessel in range(1, M)) * 75) +
-    ((dFull1/1000) * 50 + (dEmpty1/1000) * 42 + (dFull2/1000) * 40 + (dEmpty2/1000) * 30) * 0.8, GRB.MINIMIZE)
+model.setObjective(0.1 * (x1 * 1000 + x2 * 1500) +  (x1 * 1000 + x2 * 1500) / 25 +  x1 * 70 + x2 * 75 + 
+ ((dFull1/1000) * 50 + (dEmpty1/1000) * 42 + (dFull2/1000) * 40 + (dEmpty2/1000) * 30) * 0.8, GRB.MINIMIZE)
 
 model.update()
     

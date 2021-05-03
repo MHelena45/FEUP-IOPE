@@ -21094,8 +21094,6 @@ a(199,5,2,Iron,Corn) 0
 a(199,6,2,Iron,Corn) 0
 a(199,7,2,Iron,Corn) 0
 a(199,8,2,Iron,Corn) 0
-x1 0
-x2 0
 dFull(1) 9151500
 dFull(2) 9466600
 dEmpty(1) 286500
