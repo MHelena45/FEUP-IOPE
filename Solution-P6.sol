@@ -1,0 +1,31 @@
+# Solution for model P2
+# Objective value = 26375686.4
+vessel1 33
+vessel2 66
+trips(1,1) 286
+trips(2,1) 0
+trips(3,1) 286
+trips(4,1) 32
+trips(5,1) 0
+trips(6,1) 0
+trips(7,1) 0
+trips(8,1) 10
+trips(9,1) 11
+trips(10,1) 8
+trips(11,1) 0
+trips(12,1) 0
+trips(6,2) 0
+trips(7,2) 0
+trips(8,2) 265
+trips(9,2) 280
+trips(10,2) 425
+trips(11,2) 0
+trips(12,2) 0
+dLoaded(1) 7033800
+dLoaded(2) 10487500
+dEmpty(1) 179000
+dEmpty(2) 530000
+load(Mars,Wheat) 30030
+load(Mars,Corn) 18900
+load(Sky,Wheat) 19970
+load(Moon,Corn) 21100

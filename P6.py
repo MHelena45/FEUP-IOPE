@@ -94,6 +94,12 @@ dEmpty1 = model.addVar(vtype="I", name="dEmpty(%s)" % (1))
 # distance traveled with the type 2 vessel empty
 dEmpty2 = model.addVar(vtype="I", name="dEmpty(%s)" % (2))
 
+load = {}
+load["Mars", "Wheat"] = model.addVar(vtype="I", name="load(Mars,Wheat)")
+load["Mars", "Corn"] = model.addVar(vtype="I", name="load(Mars,Corn)")
+load["Sky", "Wheat"] = model.addVar(vtype="I", name="load(Sky,Wheat)")
+load["Moon", "Corn"] = model.addVar(vtype="I", name="load(Moon,Corn)")
+
 model.update()
 
 # Wheat
@@ -116,30 +122,37 @@ model.addConstr((trips[2,1] + trips[4,1] + trips[6,1] + trips[8,1]) * 35 + (trip
 model.addConstr((trips[2,1] + trips[6,1] + trips[10,1] + trips[11,1]) * 35 + (trips[6,2] + trips[10,2] + trips[11,2])* 70 >= 30000, "c6")
 
 # import Wheat - Mars
-model.addConstr((trips[10,1] + trips[12,1]) * 35 + (trips[10,2] + trips[12,2])* 70 >= 20000, "c7")
+model.addConstr((trips[10,1] + trips[12,1]) * 35 + (trips[10,2] + trips[12,2])* 70 >= load["Mars","Wheat"], "c7")
+model.addConstr(load["Mars","Wheat"] <= 40000, "c8")
 
 # import Corn - Mars
 model.addConstr(quicksum(trips[trip,1] for trip in range(5,9)) * 35 
-                + ( quicksum(trips[trip,2] for trip in range(6,9)))* 70 >= 10000, "c8")
+                + ( quicksum(trips[trip,2] for trip in range(6,9)))* 70 >= load["Mars","Corn"], "c9")
+model.addConstr(load["Mars","Corn"] <= 20000, "c10")
 
 # export Copper - Sky
-model.addConstr((trips[3,1] + trips[7,1]) * 35 + trips[7,2]* 70 >= 10000, "c9")
+model.addConstr((trips[3,1] + trips[7,1]) * 35 + trips[7,2]* 70 >= 10000, "c11")
 
 # export Iron - Sky
-model.addConstr((trips[4,1] + trips[8,1] + trips[9,1] + trips[12,1]) * 35 + (trips[8,2] + trips[9,2] + trips[12,2])* 70 >= 40000, "c10")
+model.addConstr((trips[4,1] + trips[8,1] + trips[9,1] + trips[12,1]) * 35 + (trips[8,2] + trips[9,2] + trips[12,2])* 70 >= 40000, "c12")
 
 # import Wheat - Sky
-model.addConstr((trips[9,1] + trips[11,1]) * 35 + (trips[9,2] + trips[11,2])* 70 >= 30000, "c11")
+model.addConstr((trips[9,1] + trips[11,1]) * 35 + (trips[9,2] + trips[11,2])* 70 >= load["Sky", "Wheat"], "c13") #changed
+# model.addConstr(load["Sky", "Wheat"] <= 60000, "c14") # not necessary
 
 # export Copper - Moon
-model.addConstr((trips[1,1] + trips[5,1]) * 35 >= 10000, "c12")
+model.addConstr((trips[1,1] + trips[5,1]) * 35 >= 10000, "c14")
 
 # import Corn - Moon
-model.addConstr(quicksum(trips[trip,1] for trip in range(1,5)) * 35 >= 30000, "c13")
+model.addConstr(quicksum(trips[trip,1] for trip in range(1,5)) * 35 >= load["Moon", "Corn"], "c15")
+# model.addConstr(load["Moon", "Corn"] <= 60000, "c14") # not necessary
 
+# equals loads
+model.addConstr(load["Mars", "Wheat"] + load["Sky", "Wheat"] == 50000, "c16")
+model.addConstr(load["Mars", "Corn"] + load["Moon", "Corn"] == 40000, "c17")
 
-model.addConstr(quicksum(t[tripType,1] * trips[tripType,1] for tripType in type1Trips) <= vessel1 * 345 * 24, "c14")
-model.addConstr(quicksum(t[tripType,2] * trips[tripType,2] for tripType in type2Trips) <= vessel2 * 345 * 24, "c15")
+model.addConstr(quicksum(t[tripType,1] * trips[tripType,1] for tripType in type1Trips) <= vessel1 * 345 * 24, "c18")
+model.addConstr(quicksum(t[tripType,2] * trips[tripType,2] for tripType in type2Trips) <= vessel2 * 345 * 24, "c19")
 
 model.addConstr(dLoaded1 == trips[1, 1] * d["Doce","Moon"] * 2    +               # Doce – Moon – Doce
 trips[2, 1] * (d["Doce","Moon"] + d["Mars","Doce"]) +                           # Doce – Moon - Mars - Doce
@@ -151,24 +164,24 @@ trips[6, 1] * d["Doce","Mars"] * 2 +                                            
 trips[9, 1] * d["Bom","Sky"] * 2 +                                              # Bom – Sky – Bom
 trips[10, 1] * d["Bom","Mars"] * 2  +                                           # Bom – Mars – Bom
 trips[11, 1] * (d["Bom","Sky"] + d["Mars","Bom"]) +                             # Bom – Sky - Mars – Bom
-trips[12, 1] * (d["Bom","Mars"]  + d["Sky","Bom"]),"c16")                       # Bom – Mars - Sky - Bom
+trips[12, 1] * (d["Bom","Mars"]  + d["Sky","Bom"]),"c20")                       # Bom – Mars - Sky - Bom
 
 model.addConstr(dLoaded2 == trips[6, 2] * d["Doce","Mars"] * 2 +                  # Doce – Mars – Doce
 (trips[7, 2] + trips[8, 2]) * (d["Doce","Mars"] + d["Sky","Doce"]) +            # Doce – Mars – Sky – Doce
 trips[9, 2] * d["Bom","Sky"] * 2 +                                              # Bom – Sky – Bom
 trips[10, 2] * d["Bom","Mars"] * 2 +                                            # Bom – Mars – Bom
 trips[11, 2] * (d["Bom","Sky"] + d["Mars","Bom"]) +                             # Bom – Sky - Mars – Bom
-trips[12, 2] * (d["Bom","Mars"] + d["Sky","Bom"]),"c17")                        # Bom – Mars - Sky - Bom
+trips[12, 2] * (d["Bom","Mars"] + d["Sky","Bom"]),"c21")                        # Bom – Mars - Sky - Bom
 
 model.addConstr(dEmpty1 == trips[2, 1] *  d["Moon","Mars"] +                    # Doce – Moon - Mars - Doce
 (trips[3, 1] + trips[4, 1]) *  d["Moon","Sky"] +                                # Doce – Moon - Sky - Doce
 trips[5, 1] * d["Mars","Moon"] +                                                # Doce – Mars – Moon – Doce
 (trips[7, 1] + trips[8, 1]) *  d["Mars","Sky"] +                                # Doce – Mars – Sky – Doce
 trips[11, 1] * d["Sky","Mars"] +                                                # Bom – Sky - Mars – Bom
-trips[12, 1] * d["Mars","Sky"], "c18")                                          # Bom – Mars - Sky - Bom
+trips[12, 1] * d["Mars","Sky"], "c22")                                          # Bom – Mars - Sky - Bom
 
 model.addConstr(dEmpty2 == (trips[7, 2] + trips[8, 2] + trips[12, 2]) * d["Mars","Sky"] +      # Doce – Mars – Sky – Doce && Bom – Mars - Sky - Bom
-trips[11, 2] * d["Sky","Mars"], "c19") # Bom – Mars - Sky - Bom
+trips[11, 2] * d["Sky","Mars"], "c23") # Bom – Mars - Sky - Bom
 
 # 0,1 * (número de veículos do tipo 1 *  1 000 000 + número de veículos do tipo 2 *  1 500  000) +  
 # ((número de veículos do tipo 1 *  1 000 000 + número de veículos do tipo 2 *  1500 000) / 25) + 
@@ -184,7 +197,7 @@ model.update()
     
 model.optimize()
 
-model.write("Solution-P2.sol")
-model.write("constraints-P2.lp")
+model.write("Solution-P6.sol")
+model.write("constraints-P6.lp")
 
-print(model.SolCount) # returns 8
+print(model.SolCount) # returns 6
