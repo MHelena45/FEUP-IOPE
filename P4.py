@@ -71,32 +71,28 @@ type1Trips = [i for i in range(1, 13)] # the range is [1, 13[
 model = Model("P4")
 
 # number of ships of type 1 needed
-vessel1 = model.addVar(vtype="I", name="vessel1")
+vessel1 = model.addVar(vtype="C", name="vessel1")
 # number of ships of type 2 needed
-vessel2 = model.addVar(vtype="I", name="vessel2")
+vessel2 = model.addVar(vtype="C", name="vessel2")
 
 trips = {}
 # number of trips made by ship type 1 of trip 1 to 12
 for tripType in type1Trips: 
-    trips[tripType,1] = model.addVar(vtype="I", name="trips(%s,%s)" % (tripType,1))
+    trips[tripType,1] = model.addVar(vtype="C", name="trips(%s,%s)" % (tripType,1))
 
 # number of trips made by ship type 1 of trip 6 to 12
-for type in type2Trips: 
-    trips[type,2] = model.addVar(vtype="I", name="trips(%s,%s)" % (type,2))
+for tripType in type2Trips: 
+    trips[tripType,2] = model.addVar(vtype="C", name="trips(%s,%s)" % (tripType,2))
 
 # distance traveled with the type 1 vessel in Loaded
-dLoaded1 = model.addVar(vtype="I", name="dLoaded(%s)" % (1))
+dLoaded1 = model.addVar(vtype="C", name="dLoaded(%s)" % (1))
 # distance traveled with the type 2 vessel in Loaded
-dLoaded2 = model.addVar(vtype="I", name="dLoaded(%s)" % (2))
+dLoaded2 = model.addVar(vtype="C", name="dLoaded(%s)" % (2))
 
 # distance traveled with the type 1 vessel empty
-dEmpty1 = model.addVar(vtype="I", name="dEmpty(%s)" % (1))
+dEmpty1 = model.addVar(vtype="C", name="dEmpty(%s)" % (1))
 # distance traveled with the type 2 vessel empty
-dEmpty2 = model.addVar(vtype="I", name="dEmpty(%s)" % (2))
-
-# Crew cost for each type of vessel
-crewCost1 = model.addVar(vtype="C", name="crewCost1")
-crewCost2 = model.addVar(vtype="C", name="crewCost2")
+dEmpty2 = model.addVar(vtype="C", name="dEmpty(%s)" % (2))
 
 model.update()
 
@@ -110,35 +106,35 @@ model.addConstr(quicksum(trips[trip,1] for trip in range(1,9)) * 35 + quicksum(t
 model.addConstr(quicksum(trips[trip,1] for trip in range(9,13)) * 35 
                 + ( quicksum(trips[trip,2] for trip in range(9,13)))* 70 >= 50000, "c3")
 
-# Copper
+# Copper arriving in Doce
 model.addConstr((trips[1,1] + trips[3,1] + trips[5,1] + trips[7,1]) * 35 + (trips[7,2] )* 70 >= 20000, "c4")
 
-# Iron
+# Iron arriving in Doce
 model.addConstr((trips[2,1] + trips[4,1] + trips[6,1] + trips[8,1]) * 35 + (trips[6,2] + trips[8,2])* 70 >= 20000, "c5")
 
-# Iron - Mars
+# export Iron - Mars
 model.addConstr((trips[2,1] + trips[6,1] + trips[10,1] + trips[11,1]) * 35 + (trips[6,2] + trips[10,2] + trips[11,2])* 70 >= 30000, "c6")
 
-# Wheat - Mars
+# import Wheat - Mars
 model.addConstr((trips[10,1] + trips[12,1]) * 35 + (trips[10,2] + trips[12,2])* 70 >= 20000, "c7")
 
-# Corn - Mars
+# import Corn - Mars
 model.addConstr(quicksum(trips[trip,1] for trip in range(5,9)) * 35 
                 + ( quicksum(trips[trip,2] for trip in range(6,9)))* 70 >= 10000, "c8")
 
-# Copper - Sky
+# export Copper - Sky
 model.addConstr((trips[3,1] + trips[7,1]) * 35 + trips[7,2]* 70 >= 10000, "c9")
 
-# Iron - Sky
+# export Iron - Sky
 model.addConstr((trips[4,1] + trips[8,1] + trips[9,1] + trips[12,1]) * 35 + (trips[8,2] + trips[9,2] + trips[12,2])* 70 >= 40000, "c10")
 
-# Wheat - Sky
+# import Wheat - Sky
 model.addConstr((trips[9,1] + trips[11,1]) * 35 + (trips[9,2] + trips[11,2])* 70 >= 30000, "c11")
 
-# Copper - Moon
+# export Copper - Moon
 model.addConstr((trips[1,1] + trips[5,1]) * 35 >= 10000, "c12")
 
-# Corn - Moon
+# import Corn - Moon
 model.addConstr(quicksum(trips[trip,1] for trip in range(1,5)) * 35 >= 30000, "c13")
 
 
@@ -174,10 +170,6 @@ trips[12, 1] * d["Mars","Sky"], "c18")                                          
 model.addConstr(dEmpty2 == (trips[7, 2] + trips[8, 2] + trips[12, 2]) * d["Mars","Sky"] +      # Doce – Mars – Sky – Doce && Bom – Mars - Sky - Bom
 trips[11, 2] * d["Sky","Mars"], "c19") # Bom – Mars - Sky - Bom
 
-# Force number of vessels according to solution obtained in P2
-model.addConstr(vessel1 == 46)
-model.addConstr(vessel2 == 57)
-
 # 0,1 * (número de veículos do tipo 1 *  1 000 000 + número de veículos do tipo 2 *  1 500  000) +  
 # ((número de veículos do tipo 1 *  1 000 000 + número de veículos do tipo 2 *  1500 000) / 25) + 
 # número de veículos do tipo 1 * 70 000 + 
@@ -185,7 +177,7 @@ model.addConstr(vessel2 == 57)
 # ( distância percorrida cheio pelo veículo tipo 1/1000 * 50 + distância percorrida vazio pelo veículo tipo 1/1000 * 42)* custo de combustível + 
 # ( distância percorrida cheio pelo veículo tipo 2/1000 * 40 + distância percorrida vazio pelo veículo tipo 2/1000 * 30)* custo de combustível 
 
-model.setObjective(0.1 * (vessel1 * 1000000 + vessel2 * 1500000) +  (vessel1 * 1000000 + vessel2 * 1500000) / 25 +  vessel1 * crewCost1 + vessel2 * crewCost2 + 
+model.setObjective(0.1 * (vessel1 * 1000000 + vessel2 * 1500000) +  (vessel1 * 1000000 + vessel2 * 1500000) / 25 +  vessel1 * 70000 + vessel2 * 75000 + 
  ((dLoaded1/1000) * 50 + (dEmpty1/1000) * 42 + (dLoaded2/1000) * 40 + (dEmpty2/1000) * 30) * 0.8, GRB.MINIMIZE)
 
 model.update()
@@ -195,7 +187,13 @@ model.optimize()
 model.write("Solution-P4.sol")
 model.write("constraints-P4.lp")
 
-vars = model.getVars()
+print(model.SolCount) # returns 8
 
-print(crewCost1.SAUBUp)
-    
+print('Z = {}'.format(model.objVal))
+for v in model.getVars():
+    print(v.varName)
+    print('{} = {}\tReduced cost {}'.format(v.varName, v.x, v.RC))
+
+print('\nSensitivity Analysis\nConstraint\tShadow Price\tSlack')
+for c in model.getConstrs():
+    print('{}: \t\t{}\t\t{}'.format(c.ConstrName, c.Pi, c.Slack))

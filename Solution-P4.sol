@@ -1,29 +1,27 @@
 # Solution for model P4
-# Objective value = 19202440
-vessel1 46
-vessel2 57
-trips(1,1) 286
-trips(2,1) 37
-trips(3,1) 286
-trips(4,1) 249
+# Objective value = 2.6596445272601791e+07
+vessel1 4.5318610536001842e+01
+vessel2 5.7108350586611451e+01
+trips(1,1) 2.8571428571428572e+02
+trips(2,1) 0
+trips(3,1) 2.8571428571428572e+02
+trips(4,1) 2.8571428571428572e+02
 trips(5,1) 0
 trips(6,1) 0
 trips(7,1) 0
 trips(8,1) 0
 trips(9,1) 0
-trips(10,1) 14
+trips(10,1) 0
 trips(11,1) 0
 trips(12,1) 0
-trips(6,2) 125
+trips(6,2) 1.4285714285714286e+02
 trips(7,2) 0
-trips(8,2) 18
-trips(9,2) 429
-trips(10,2) 279
+trips(8,2) 0
+trips(9,2) 4.2857142857142856e+02
+trips(10,2) 2.8571428571428572e+02
 trips(11,2) 0
 trips(12,2) 0
-dLoaded(1) 12006900
-dLoaded(2) 9408400
-dEmpty(1) 304500
-dEmpty(2) 36000
-crewCost1 0
-crewCost2 0
+dLoaded(1) 1.2285714285714287e+07
+dLoaded(2) 9.4571428571428563e+06
+dEmpty(1) 2.8571428571428574e+05
+dEmpty(2) 0
