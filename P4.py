@@ -189,7 +189,13 @@ model.write("constraints-P4.lp")
 
 print(model.SolCount) # returns 8
 
-print('Z = {}'.format(model.objVal))
+print("crewCost1 superior = ", vessel1.SAObjUp - ( 0.1 * 1000000 +  1000000 /25))
+print("crewCost1 inferior = ", vessel1.SAObjLow - ( 0.1 * 1000000 +  1000000 /25))
+
+print("crewCost2 superior = ", vessel2.SAObjUp - ( 0.1 * 1500000 +  1500000 /25))
+print("crewCost2 inferior = ", vessel2.SAObjLow - ( 0.1 * 1500000 +  1500000 /25))
+
+print('\nZ = {}'.format(model.objVal))
 for v in model.getVars():
     print('{} = {}\tReduced cost {} \tSAObjLow {} \tSAObjUp {} '.format(v.varName, v.x, v.RC, v.SAObjLow, v.SAObjUp))
 
