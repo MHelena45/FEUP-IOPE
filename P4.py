@@ -191,8 +191,7 @@ print(model.SolCount) # returns 8
 
 print('Z = {}'.format(model.objVal))
 for v in model.getVars():
-    print(v.varName)
-    print('{} = {}\tReduced cost {}'.format(v.varName, v.x, v.RC))
+    print('{} = {}\tReduced cost {} \tSAObjLow {} \tSAObjUp {} '.format(v.varName, v.x, v.RC, v.SAObjLow, v.SAObjUp))
 
 print('\nSensitivity Analysis\nConstraint\tShadow Price\tSlack')
 for c in model.getConstrs():
