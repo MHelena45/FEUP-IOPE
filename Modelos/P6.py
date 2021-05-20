@@ -197,7 +197,7 @@ model.update()
     
 model.optimize()
 
-model.write("../Resultados/Solution-P6.sol")
-model.write("../Resultados/constraints-P6.lp")
+model.write("../Solucoes/Solution-P6.sol")
+model.write("P6.lp")
 
-print(model.SolCount) # returns 6
+print(model.SolCount)

@@ -234,6 +234,7 @@ model.update()
 model.optimize()
 
 # generates the file with the solution
-model.write("../Resultados/Solution-P2-Exact.sol")
-# generates the file with the constraints
-model.write("../Resultados/constraints-P2-Exact.lp")
+model.write("../Solucoes/Solution-P2-Exact.sol")
+
+# generates lp file
+model.write("P2-Exact.lp")

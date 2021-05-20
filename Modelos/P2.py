@@ -184,7 +184,7 @@ model.update()
     
 model.optimize()
 
-model.write("../Resultados/Solution-P2.sol")
-model.write("../Resultados/constraints-P2.lp")
+model.write("../Solucoes/Solution-P2.sol")
+model.write("P2.lp")
 
 print(model.SolCount)
