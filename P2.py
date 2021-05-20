@@ -71,28 +71,28 @@ type1Trips = [i for i in range(1, 13)] # the range is [1, 13[
 model = Model("P2")
 
 # number of ships of type 1 needed
-vessel1 = model.addVar(vtype="I", name="vessel1")
+vessel1 = model.addVar(vtype="C", name="vessel1")
 # number of ships of type 2 needed
-vessel2 = model.addVar(vtype="I", name="vessel2")
+vessel2 = model.addVar(vtype="C", name="vessel2")
 
 trips = {}
 # number of trips made by ship type 1 of trip 1 to 12
 for tripType in type1Trips: 
-    trips[tripType,1] = model.addVar(vtype="I", name="trips(%s,%s)" % (tripType,1))
+    trips[tripType,1] = model.addVar(vtype="C", name="trips(%s,%s)" % (tripType,1))
 
 # number of trips made by ship type 1 of trip 6 to 12
 for tripType in type2Trips: 
-    trips[tripType,2] = model.addVar(vtype="I", name="trips(%s,%s)" % (tripType,2))
+    trips[tripType,2] = model.addVar(vtype="C", name="trips(%s,%s)" % (tripType,2))
 
 # distance traveled with the type 1 vessel in Loaded
-dLoaded1 = model.addVar(vtype="I", name="dLoaded(%s)" % (1))
+dLoaded1 = model.addVar(vtype="C", name="dLoaded(%s)" % (1))
 # distance traveled with the type 2 vessel in Loaded
-dLoaded2 = model.addVar(vtype="I", name="dLoaded(%s)" % (2))
+dLoaded2 = model.addVar(vtype="C", name="dLoaded(%s)" % (2))
 
 # distance traveled with the type 1 vessel empty
-dEmpty1 = model.addVar(vtype="I", name="dEmpty(%s)" % (1))
+dEmpty1 = model.addVar(vtype="C", name="dEmpty(%s)" % (1))
 # distance traveled with the type 2 vessel empty
-dEmpty2 = model.addVar(vtype="I", name="dEmpty(%s)" % (2))
+dEmpty2 = model.addVar(vtype="C", name="dEmpty(%s)" % (2))
 
 model.update()
 
@@ -187,4 +187,4 @@ model.optimize()
 model.write("Solution-P2.sol")
 model.write("constraints-P2.lp")
 
-print(model.SolCount) # returns 8
+print(model.SolCount)
