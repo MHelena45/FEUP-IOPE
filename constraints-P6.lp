@@ -1,4 +1,4 @@
-\ Model P2
+\ Model P6
 \ LP format - for model browsing. Use MPS format to capture full model detail.
 Minimize
   210000 vessel1 + 285000 vessel2 + 0.04 dLoaded(1) + 0.032 dLoaded(2)
@@ -58,10 +58,4 @@ Subject To
  c23: - 2000 trips(7,2) - 2000 trips(8,2) - 2000 trips(11,2)
    - 2000 trips(12,2) + dEmpty(2) = 0
 Bounds
-Generals
- vessel1 vessel2 trips(1,1) trips(2,1) trips(3,1) trips(4,1) trips(5,1)
- trips(6,1) trips(7,1) trips(8,1) trips(9,1) trips(10,1) trips(11,1)
- trips(12,1) trips(6,2) trips(7,2) trips(8,2) trips(9,2) trips(10,2)
- trips(11,2) trips(12,2) dLoaded(1) dLoaded(2) dEmpty(1) dEmpty(2)
- load(Mars,Wheat) load(Mars,Corn) load(Sky,Wheat) load(Moon,Corn)
 End
