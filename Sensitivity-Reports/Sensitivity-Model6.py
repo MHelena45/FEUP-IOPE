@@ -19,7 +19,7 @@ print('\n\n--- SENSITIVITY REPORT ---\n\n')
 
 print('Valor da Função Objetivo = {}\n'.format(model.objVal))
 
-print('Variables\nName\tFinal Value\tReduced cost\tObjective Coefficient\tCoefficient Lower Bound\tCoefficient Upper Bound')
+print('Variables\nName\tFinal Value\tReduced cost\tObjective Coefficient\tAllowable Decrease\tAllowable Increase')
 for v in model.getVars():
     print('{}\t{}\t{}\t{}\t{}\t{}'.format(v.varName, v.x, v.RC, v.Obj, v.SAObjLow, v.SAObjUp))
 
