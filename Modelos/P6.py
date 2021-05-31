@@ -1,6 +1,7 @@
 import math
 from gurobipy import *
 
+# Distance between ports
 d={}
 d={ ("Doce","Doce"):  0,  ("Doce","Bom"):math.inf,  ("Doce","Sky"):6000, ("Doce","Moon"):5000, ("Doce","Mars"):5500,
     ("Bom","Doce"):math.inf,  ("Bom","Bom"):0,  ("Bom","Sky"): 6000, ("Bom","Moon"): 5800, ("Bom","Mars"):4800,
@@ -8,6 +9,7 @@ d={ ("Doce","Doce"):  0,  ("Doce","Bom"):math.inf,  ("Doce","Sky"):6000, ("Doce"
     ("Moon","Doce"):5000, ("Moon","Bom"):5800,  ("Moon","Sky"): 500, ("Moon","Moon"): 0, ("Moon","Mars"): 1000,
     ("Mars","Doce"):5500, ("Mars","Bom"):4800, ("Mars","Sky"): 2000, ("Mars","Moon"): 1000, ("Mars","Mars"): 0}
 
+# Itineraries
 '''
 ID Route                Vessel type Product
 1 Doce – Moon – Doce        1   Corn e Copper
@@ -24,6 +26,7 @@ ID Route                Vessel type Product
 12 Bom – Mars - Sky - Bom   1 e 2 Wheat e Iron
 '''
 
+# Time necessary to perform trips
 t={}
 
 # Doce – Moon – Doce
@@ -68,7 +71,11 @@ t[12, 2] = d["Bom","Mars"]/20 + d["Mars","Sky"]/24 + d["Sky","Bom"]/20
 
 type2Trips = [i for i in range(6, 13)] # the range is [6, 13[
 type1Trips = [i for i in range(1, 13)] # the range is [1, 13[
+
+# Create model
 model = Model("P6")
+
+# Define model's decision variables
 
 # number of ships of type 1 needed
 vessel1 = model.addVar(vtype="C", name="vessel1")
@@ -102,20 +109,22 @@ load["Moon", "Corn"] = model.addVar(vtype="C", name="load(Moon,Corn)")
 
 model.update()
 
-# Wheat
+# Define model constraints
+
+# Wheat exported by BOM
 model.addConstr(quicksum(trips[trip,1] for trip in range(9,13)) * 35 + quicksum(trips[trip,2] for trip in range(9,13)) * 70 >= 50000, "c1")
 
-# Corn
+# Corn exported by DOCE
 model.addConstr(quicksum(trips[trip,1] for trip in range(1,9)) * 35 + quicksum(trips[trip,2] for trip in range(6,9)) * 70 >= 40000, "c2")
 
-# Iron of BOM
+# Iron imported by BOM
 model.addConstr(quicksum(trips[trip,1] for trip in range(9,13)) * 35 
                 + ( quicksum(trips[trip,2] for trip in range(9,13)))* 70 >= 50000, "c3")
 
-# Copper arriving in Doce
+# Copper imported by Doce
 model.addConstr((trips[1,1] + trips[3,1] + trips[5,1] + trips[7,1]) * 35 + (trips[7,2] )* 70 >= 20000, "c4")
 
-# Iron arriving in Doce
+# Iron imported by Doce
 model.addConstr((trips[2,1] + trips[4,1] + trips[6,1] + trips[8,1]) * 35 + (trips[6,2] + trips[8,2])* 70 >= 20000, "c5")
 
 # export Iron - Mars
@@ -151,9 +160,11 @@ model.addConstr(quicksum(trips[trip,1] for trip in range(1,5)) * 35 >= load["Moo
 model.addConstr(load["Mars", "Wheat"] + load["Sky", "Wheat"] == 50000, "c16")
 model.addConstr(load["Mars", "Corn"] + load["Moon", "Corn"] == 40000, "c17")
 
+# Total travel time
 model.addConstr(quicksum(t[tripType,1] * trips[tripType,1] for tripType in type1Trips) <= vessel1 * 345 * 24, "c18")
 model.addConstr(quicksum(t[tripType,2] * trips[tripType,2] for tripType in type2Trips) <= vessel2 * 345 * 24, "c19")
 
+# dLoaded1 is equal to the total distance traveled by all vessels of type 1, when loaded
 model.addConstr(dLoaded1 == trips[1, 1] * d["Doce","Moon"] * 2    +               # Doce – Moon – Doce
 trips[2, 1] * (d["Doce","Moon"] + d["Mars","Doce"]) +                           # Doce – Moon - Mars - Doce
 (trips[4, 1] + trips[3, 1]) * (d["Doce","Moon"] + d["Sky","Doce"]) +            # Doce – Moon - Sky - Doce
@@ -166,6 +177,7 @@ trips[10, 1] * d["Bom","Mars"] * 2  +                                           
 trips[11, 1] * (d["Bom","Sky"] + d["Mars","Bom"]) +                             # Bom – Sky - Mars – Bom
 trips[12, 1] * (d["Bom","Mars"]  + d["Sky","Bom"]),"c20")                       # Bom – Mars - Sky - Bom
 
+# dLoaded2 is equal to the total distance traveled by all vessels of type 2, when loaded
 model.addConstr(dLoaded2 == trips[6, 2] * d["Doce","Mars"] * 2 +                  # Doce – Mars – Doce
 (trips[7, 2] + trips[8, 2]) * (d["Doce","Mars"] + d["Sky","Doce"]) +            # Doce – Mars – Sky – Doce
 trips[9, 2] * d["Bom","Sky"] * 2 +                                              # Bom – Sky – Bom
@@ -173,6 +185,7 @@ trips[10, 2] * d["Bom","Mars"] * 2 +                                            
 trips[11, 2] * (d["Bom","Sky"] + d["Mars","Bom"]) +                             # Bom – Sky - Mars – Bom
 trips[12, 2] * (d["Bom","Mars"] + d["Sky","Bom"]),"c21")                        # Bom – Mars - Sky - Bom
 
+# dEmpty1 is equal to the total distance traveled by all vessels of type 1, when empty
 model.addConstr(dEmpty1 == trips[2, 1] *  d["Moon","Mars"] +                    # Doce – Moon - Mars - Doce
 (trips[3, 1] + trips[4, 1]) *  d["Moon","Sky"] +                                # Doce – Moon - Sky - Doce
 trips[5, 1] * d["Mars","Moon"] +                                                # Doce – Mars – Moon – Doce
@@ -180,10 +193,12 @@ trips[5, 1] * d["Mars","Moon"] +                                                
 trips[11, 1] * d["Sky","Mars"] +                                                # Bom – Sky - Mars – Bom
 trips[12, 1] * d["Mars","Sky"], "c22")                                          # Bom – Mars - Sky - Bom
 
+# dEmpty2 is equal to the total distance traveled by all vessels of type 2, when empty
 model.addConstr(dEmpty2 == (trips[7, 2] + trips[8, 2] + trips[12, 2]) * d["Mars","Sky"] +      # Doce – Mars – Sky – Doce && Bom – Mars - Sky - Bom
 trips[11, 2] * d["Sky","Mars"], "c23") # Bom – Mars - Sky - Bom
 
-# 0,1 * (número de veículos do tipo 1 *  1 000 000 + número de veículos do tipo 2 *  1 500  000) +  
+# Define objective function
+# Minimize 0,1 * (número de veículos do tipo 1 *  1 000 000 + número de veículos do tipo 2 *  1 500  000) +  
 # ((número de veículos do tipo 1 *  1 000 000 + número de veículos do tipo 2 *  1500 000) / 25) + 
 # número de veículos do tipo 1 * 70 000 + 
 # número de veículos do tipo 2 * 75 000 + 
@@ -195,9 +210,11 @@ model.setObjective(0.1 * (vessel1 * 1000000 + vessel2 * 1500000) +  (vessel1 * 1
 
 model.update()
     
+# Solve model
 model.optimize()
 
 model.write("../Solucoes/Solution-P6.sol")
 model.write("P6.lp")
 
-print(model.SolCount)
+# Number of solutions found by Gurobi
+print('Number of solutions found by Gurobi: {}'.format(model.SolCount))
