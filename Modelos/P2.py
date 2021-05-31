@@ -201,7 +201,7 @@ model.setObjective(0.1 * (vessel1 * 1000000 + vessel2 * 1500000) +  (vessel1 * 1
 # Update model
 model.update()
 
-# Optimize model
+# Solve model
 model.optimize()
 
 model.write("../Solucoes/Solution-P2.sol")
