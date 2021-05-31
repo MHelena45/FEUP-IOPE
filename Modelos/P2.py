@@ -188,7 +188,7 @@ model.addConstr(dEmpty2 == (trips[7, 2] + trips[8, 2] + trips[12, 2]) * d["Mars"
 trips[11, 2] * d["Sky","Mars"], "c19") # Bom – Mars - Sky - Bom
 
 #Objective Function
-# 0,1 * (número de veículos do tipo 1 *  1 000 000 + número de veículos do tipo 2 *  1 500  000) +  
+# Minimize 0,1 * (número de veículos do tipo 1 *  1 000 000 + número de veículos do tipo 2 *  1 500  000) +  
 # ((número de veículos do tipo 1 *  1 000 000 + número de veículos do tipo 2 *  1500 000) / 25) + 
 # número de veículos do tipo 1 * 70 000 + 
 # número de veículos do tipo 2 * 75 000 + 
