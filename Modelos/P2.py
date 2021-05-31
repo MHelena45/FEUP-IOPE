@@ -174,7 +174,7 @@ trips[11, 2] * (d["Bom","Sky"] + d["Mars","Bom"]) +                             
 trips[12, 2] * (d["Bom","Mars"] + d["Sky","Bom"]),"c17")                        # Bom – Mars - Sky - Bom
 
 
-# dLoaded1 is equal to the total distance traveled by all vessels of type 1, when empty
+# dEmpty1 is equal to the total distance traveled by all vessels of type 1, when empty
 model.addConstr(dEmpty1 == trips[2, 1] *  d["Moon","Mars"] +                    # Doce – Moon - Mars - Doce
 (trips[3, 1] + trips[4, 1]) *  d["Moon","Sky"] +                                # Doce – Moon - Sky - Doce
 trips[5, 1] * d["Mars","Moon"] +                                                # Doce – Mars – Moon – Doce
@@ -183,7 +183,7 @@ trips[11, 1] * d["Sky","Mars"] +                                                
 trips[12, 1] * d["Mars","Sky"], "c18")                                          # Bom – Mars - Sky - Bom
 
 
-# dLoaded1 is equal to the total distance traveled by all vessels of type 2, when empty
+# dEmpty2 is equal to the total distance traveled by all vessels of type 2, when empty
 model.addConstr(dEmpty2 == (trips[7, 2] + trips[8, 2] + trips[12, 2]) * d["Mars","Sky"] +      # Doce – Mars – Sky – Doce && Bom – Mars - Sky - Bom
 trips[11, 2] * d["Sky","Mars"], "c19") # Bom – Mars - Sky - Bom
 
